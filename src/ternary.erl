@@ -33,7 +33,7 @@ to_integer([], Acc) ->
 
 
 negate(Trits) ->
-	[X * -1 || X <- Trits].
+	[-X || X <- Trits].
 
 
 add(Trits, Trits0) ->
