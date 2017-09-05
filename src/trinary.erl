@@ -3,7 +3,7 @@
 
 -module(trinary).
 
--compile(export_all).
+-export([from_integer/1, from_trits/1, from_trytes/1, from_text/1, to_text/1]).
 
 -define(CHARSET, <<"9ABCDEFGHIJKLMNOPQRSTUVWXYZ">>).
 
@@ -18,39 +18,18 @@ from_trits(Trits) ->
 	from_trits(Trits0, <<>>).
 
 from_trits([T0, T1, T2|T], Acc) ->
-	Index =
-		case T0 * 9 + T1 * 3 + T2 of
-		I when I < 0 ->
-			27 - abs(I);
-		I ->
-			I
-		end,
-	X = binary:at(?CHARSET, Index),
+	X = tryte(T0 * 9 + T1 * 3 + T2),
 	from_trits(T, <<X, Acc/binary>>);
 from_trits([], Acc) ->
 	Acc.
 
 
-pad(Trits) ->
-	case length(Trits) rem 3 of
-	2 ->
-		[0|Trits];
-	1 ->
-		[0, 0|Trits];
-	0 ->
-		Trits
-	end.
-
-
 from_trytes(Trytes) ->
 	from_trytes(Trytes, <<>>).
 
-from_trytes([H|T], Acc) when H >= 0 ->
-	X = binary:at(?CHARSET, H),
-	from_trytes(T, <<Acc/binary, X>>);
-from_trytes([H|T], Acc) when H < 0 ->
-	X = binary:at(?CHARSET, H + 27),
-	from_trytes(T, <<Acc/binary, X>>);
+from_trytes([H|T], Acc) ->
+	X = tryte(H),
+	from_trytes(T, <<X, Acc/binary>>);
 from_trytes([], Acc) ->
 	Acc.
 
@@ -66,10 +45,6 @@ from_text(<<>>, Acc) ->
 	Acc.
 
 
-tryte(X) ->
-	binary:at(?CHARSET, X).
-
-
 to_text(Trytes) ->
 	to_text(Trytes, <<>>).
 
@@ -80,7 +55,24 @@ to_text(<<>>, Acc) ->
 	Acc.
 
 
+tryte(X) when X < 0 ->
+	tryte(X + 27);
+tryte(X) ->
+	binary:at(?CHARSET, X).
+
+
 value($9) ->
 	0;
 value(Tryte) when Tryte >= $A andalso Tryte =< $Z ->
 	Tryte - $A + 1.
+
+
+pad(Trits) ->
+	pad(length(Trits) rem 3, Trits).
+
+pad(0, Trits) ->
+	Trits;
+pad(1, Trits) ->
+	[0, 0|Trits];
+pad(2, Trits) ->
+	[0|Trits].
