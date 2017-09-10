@@ -4,6 +4,6 @@
 	{vsn, "0.1.0"},
 	{mod, {iota_app, []}},
 	{env, []},
-	{modules, [iota, iota_crypto, iota_srv, keccak, ternary]},
+	{modules, [iota, iota_app, iota_sup, iota_srv, iota_crypto, trinary, ternary]},
 	{applications, [kernel, stdlib]}
 ]}.
