@@ -4,21 +4,27 @@
 -module(iota).
 -include("iota.hrl").
 
--export([seed/0, hash/1, bch/1]).
+-export([seed/0, curl/1, kerl/1, bch/1]).
 
 -compile(export_all).
 
+
 seed() ->
-	iota_crypto:generate_seed().
+	iota_hash:generate_seed().
 
 
-hash(Bin) ->
-	hex:encode(iota_crypto:hash(Bin)).
+curl(Bin) when byte_size(Bin) > 0 andalso byte_size(Bin) rem 81 == 0 ->
+	iota_hash:curl(Bin).
+
+
+kerl(Bin) when byte_size(Bin) > 0 andalso byte_size(Bin) rem 81 == 0 ->
+	iota_hash:kerl(Bin).
 
 
 bch(N) ->
 	Bin = crypto:strong_rand_bytes(N),
 	<< <<(X rem 3):2>> || <<X:2>> <= Bin >>.
+
 
 
 -define(TEST, 0).
