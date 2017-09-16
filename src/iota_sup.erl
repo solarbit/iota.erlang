@@ -1,3 +1,6 @@
+% Copyright (c) 2017 Solarbit.cc <steve@solarbit.cc>
+% See LICENCE
+
 -module(iota_sup).
 
 -export([start_link/1]).

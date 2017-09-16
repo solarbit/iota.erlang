@@ -21,9 +21,9 @@ seed() ->
 	iota_hash:generate_seed().
 
 
-curl(Bin) when byte_size(Bin) > 0 andalso byte_size(Bin) rem 81 == 0 ->
-	iota_hash:curl(Bin).
+curl(Trytes) when byte_size(Trytes) > 0 andalso byte_size(Trytes) rem 81 == 0 ->
+	iota_hash:curl(Trytes).
 
 
-kerl(Bin) when byte_size(Bin) > 0 andalso byte_size(Bin) rem 81 == 0 ->
-	iota_hash:kerl(Bin).
+kerl(Trytes) when byte_size(Trytes) > 0 andalso byte_size(Trytes) rem 81 == 0 ->
+	iota_hash:kerl(Trytes).

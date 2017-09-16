@@ -4,7 +4,7 @@
 -module(iota_hash).
 -include("iota.hrl").
 
--export([generate_seed/0, curl/1, kerl/1]).
+-export([generate_seed/0, curl/1, curl/2, kerl/1, kerl/2]).
 
 -define(TRYTE_HASHLENGTH, 81).
 

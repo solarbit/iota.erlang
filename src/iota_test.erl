@@ -1,3 +1,6 @@
+% Copyright (c) 2017 Solarbit.cc <steve@solarbit.cc>
+% See LICENCE
+
 -module(iota_test).
 
 -include("iota.hrl").
