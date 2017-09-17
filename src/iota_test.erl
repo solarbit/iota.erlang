@@ -7,6 +7,7 @@
 
 -export([run/0]).
 
+
 run() ->
 	test_ternary(),
 	test_trinary(),
@@ -16,6 +17,7 @@ run() ->
 	test_kerl_multisqueeze(),
 	test_kerl_multiabsorb_multisqueeze(),
 	ok.
+
 
 test_ternary() ->
 	?TTY(ternary),
@@ -100,7 +102,7 @@ test_curl() ->
 		"NHBAIJHLYZIZGGIDFWVNXZQADLEDJFTIUTQWCQSX9QNGUZXGXJYUUTFSZPQKXBA9DFRQRLTLUJENKESDGTZRGRSLTNYTITXRXRGVLWBTEWP",
 		"JXZYLGHLQBAVYVOSABIVTQYQM9FIQKCBRRUEMVVTMERLWOK">>,
     Expected = <<"KXRVLFETGUTUWBCNCC9DWO99JQTEI9YXVOZHWELSYP9SG9KN9WCKXOVTEFHFH9EFZJKFYCZKQPPBXYSGJ">>,
-	Output = iota_hash:curl(Trytes),
+	Output = iota_crypto:hash(curl, Trytes),
 	?TTY({test_curl, Output == Expected, Expected, Output}).
 
 
@@ -109,23 +111,26 @@ test_sha3_implementation() ->
 	Hash = sha3:hash(384, <<"Message">>),
 	?TTY({test_sha3_implementation, Hash == hex:decode(Expected), Expected, hex:encode(Hash)}).
 
+
 test_kerl_one_absorb() ->
 	Input = <<"EMIDYNHBWMBCXVDEFOFWINXTERALUKYYPPHKP9JJFGJEIUY9MUDVNFZHMMWZUYUSWAIOWEVTHNWMHANBH">>,
 	Expected = <<"EJEAOOZYSAWFPZQESYDHZCGYNSTWXUMVJOVDWUNZJXDGWCLUFGIMZRMGCAZGKNPLBRLGUNYWKLJTYEAQX">>,
-	Output = iota_hash:kerl(Input),
+	Output = iota_crypto:hash(kerl, Input),
 	?TTY({test_kerl_one_absorb, Output == Expected, Input, Expected, Output}).
+
 
 test_kerl_multisqueeze() ->
 	Input = <<"9MIDYNHBWMBCXVDEFOFWINXTERALUKYYPPHKP9JJFGJEIUY9MUDVNFZHMMWZUYUSWAIOWEVTHNWMHANBH">>,
 	Expected = <<"G9JYBOMPUXHYHKSNRNMMSSZCSHOFYOYNZRSZMAAYWDYEIMVVOGKPJBVBM9TDPULSFUNMTVXRKFIDOHUXX",
 			"VYDLFSZYZTWQYTE9SPYYWYTXJYQ9IFGYOLZXWZBKWZN9QOOTBQMWMUBLEWUEEASRHRTNIQWJQNDWRYLCA">>,
-	Output = iota_hash:kerl(Input, 2),
+	Output = iota_crypto:hash(kerl, Input, [{squeeze, 2}]),
 	?TTY({test_kerl_multisqueeze, Output == Expected, Input, Expected, Output}).
+
 
 test_kerl_multiabsorb_multisqueeze() ->
 	Input = <<"G9JYBOMPUXHYHKSNRNMMSSZCSHOFYOYNZRSZMAAYWDYEIMVVOGKPJBVBM9TDPULSFUNMTVXRKFIDOHUXX",
 			"VYDLFSZYZTWQYTE9SPYYWYTXJYQ9IFGYOLZXWZBKWZN9QOOTBQMWMUBLEWUEEASRHRTNIQWJQNDWRYLCA">>,
 	Expected = <<"LUCKQVACOGBFYSPPVSSOXJEKNSQQRQKPZC9NXFSMQNRQCGGUL9OHVVKBDSKEQEBKXRNUJSRXYVHJTXBPDW",
 			"QGNSCDCBAIRHAQCOWZEBSNHIJIGPZQITIBJQ9LNTDIBTCQ9EUWKHFLGFUVGGUWJONK9GBCDUIMAYMMQX">>,
-	Output = iota_hash:kerl(Input, 2),
+	Output = iota_crypto:hash(kerl, Input, [{squeeze, 2}]),
 	?TTY({test_kerl_multiabsorb_multisqueeze, Output == Expected, Input, Expected, Output}).
