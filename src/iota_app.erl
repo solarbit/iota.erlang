@@ -3,12 +3,15 @@
 
 -module(iota_app).
 
+-include("iota.hrl").
+
 -behaviour(application).
 -export([start/2, stop/1]).
 
 
 start(normal, []) ->
-    iota_sup:start_link([{iota_srv, []}, {iota_data_srv, []}]).
+	Env = application:get_all_env(),
+    iota_sup:start_link([{iota_srv, Env}, {iota_data_srv, Env}]).
 
 
 stop(_State) ->
