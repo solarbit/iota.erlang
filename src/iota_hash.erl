@@ -126,7 +126,7 @@ bcurlt_squeeze(_, _, 0, HAcc, LAcc) ->
 
 
 bcurlt_transform(HighState, LowState) ->
-	bcurlt_transform(HighState, LowState, 1, 1, []).
+	bcurlt_transform(HighState, LowState, 1).
 
 bcurlt_transform(HighState, LowState, Round) when Round =< ?CURL_ROUNDS ->
 	{HighState0, LowState0} = curl_transform(HighState, LowState, 1, 1, [], []),
