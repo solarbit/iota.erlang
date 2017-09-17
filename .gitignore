@@ -1,5 +1,8 @@
 deps/*
-priv/*
+priv/*.db
+priv/seed/*
+src/poc/*
+work/*
 *.o
 *.so
 *.beam
