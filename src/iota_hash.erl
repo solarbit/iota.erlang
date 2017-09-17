@@ -4,7 +4,7 @@
 -module(iota_hash).
 -include("iota.hrl").
 
--export([generate_seed/0, curl/1, curl/2, kerl/1, kerl/2]).
+-export([generate_seed/0, curl/1, curl/2, bcurlt/2, bcurlt/3, kerl/1, kerl/2]).
 
 -define(TRYTE_HASHLENGTH, 81).
 
@@ -25,12 +25,13 @@ generate_seed() ->
 	trinary:from_binary(Bin0).
 
 
+
 curl(Trytes) ->
 	curl(Trytes, 1).
 
-curl(Trytes, Count) ->
+curl(Trytes, SqueezeCount) ->
 	State = curl_absorb(Trytes),
-	curl_squeeze(State, Count).
+	curl_squeeze(State, SqueezeCount).
 
 
 curl_absorb(Trytes) ->
@@ -81,12 +82,45 @@ curl_next_index(X) ->
 	X - 365.
 
 
+bcurlt(HighTrytes, LowTrytes) ->
+	bcurlt(HighTrytes, LowTrytes, 1).
+
+bcurlt(HighTrytes, LowTrytes, SqueezeCount) ->
+	{HighState, LowState} = bcurlt_absorb(HighTrytes, LowTrytes),
+	bcurlt_squeeze(HighState, LowState, SqueezeCount).
+
+
+bcurlt_absorb(High, Low) ->
+	bcurlt_absorb(High, Low, ?CURL_INITIAL_STATE, ?CURL_INITIAL_STATE).
+
+bcurlt_absorb(High, Low, HighState, LowState) ->
+	% TODO: Implement
+	{HighState, LowState}.
+
+
+bcurlt_squeeze(HighState, LowState, Count) ->
+	bcurlt_squeeze(HighState, LowState, Count, <<>>).
+
+bcurlt_squeeze(High, Low, Count, Acc) when Count > 0 ->
+	% TODO: Implement
+	bcurlt_squeeze(High, Low, Count - 1, Acc);
+bcurlt_squeeze(_, _, 0, Acc) ->
+	Acc.
+
+
+bcurlt_transform(HighState, LowState, Index, Count, Acc) when Count =< ?STATE_LENGTH ->
+	% TODO: Implement
+	bcurlt_transform(HighState, LowState, Index, Count + 1, Acc);
+bcurlt_transform(_, _, _, _, Acc) ->
+	lists:reverse(Acc).
+
+
 kerl(Trytes) ->
 	kerl(Trytes, 1).
 
-kerl(Trytes, HashCount) ->
+kerl(Trytes, SqueezeCount) ->
 	Hash = kerl_absorb(Trytes),
-	kerl_squeeze(Hash, HashCount).
+	kerl_squeeze(Hash, SqueezeCount).
 
 
 kerl_absorb(Trytes) ->
