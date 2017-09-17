@@ -8,74 +8,74 @@
 -export([request/1]).
 
 
-request(#http_request{path = <<$/, Path/binary>>, content = Content}) ->
+request(#http_request{path = <<$/>>, content = Content}) ->
 	Json = json:decode(Content),
-	{Status, Json0} = request(Path, Json),
+	Command = maps:get(<<"command">>, Json, undefined),
+	{Status, Json0} = response(Command, Json),
 	#http_response{status = Status, content = json:encode(Json0)}.
 
 
-request(<<"addNeighbors">>, Map) ->
+response(<<"getNodeInfo">>, _Map) ->
+	{ok, #{}};
+
+response(<<"getNeighbors">>, _Map) ->
+	{ok, #{}};
+
+response(<<"addNeighbors">>, Map) ->
 	true = maps:has_key(<<"uris">>, Map),
 	{ok, #{}};
 
-request(<<"removeNeighbors">>, Map) ->
+response(<<"removeNeighbors">>, Map) ->
 	true = maps:has_key(<<"uris">>, Map),
 	{ok, #{}};
 
-
-request(<<"attachToTangle">>, Map) ->
+response(<<"attachToTangle">>, Map) ->
 	true = maps:has_key(<<"trunkTransaction">>, Map)
 		andalso maps:has_key(<<"branchTransaction">>, Map)
 		andalso maps:has_key(<<"minWeightMagnitude">>, Map)
 		andalso maps:has_key(<<"trytes">>, Map),
 	{ok, #{}};
 
-request(<<"broadcastTransactions">>, Map) ->
+response(<<"interruptAttachingToTangle">>, _Map) ->
+	{ok, #{}};
+
+response(<<"broadcastTransactions">>, Map) ->
 	true = maps:has_key(<<"trytes">>, Map),
 	{ok, #{}};
 
-request(<<"findTransactions">>, Map) ->
+response(<<"findTransactions">>, Map) ->
 	true = maps:has_key(<<"bundles">>, Map)
 		orelse maps:has_key(<<"addresses">>, Map)
 		orelse maps:has_key(<<"tags">>, Map)
 		orelse maps:has_key(<<"approvees">>, Map),
 	{ok, #{}};
 
-request(<<"getBalances">>, Map) ->
-	true = maps:has_key(<<"addresses">>, Map)
-		andalso maps:has_key(<<"threshold">>, Map),
+response(<<"storeTransactions">>, Map) ->
+	true = maps:has_key(<<"trytes">>, Map),
 	{ok, #{}};
 
-request(<<"getInclusionStates">>, Map) ->
+response(<<"getTransactionsToApprove">>, _Map) ->
+	{ok, #{}};
+
+response(<<"getMissingTransactions">>, _Map) ->
+	{ok, #{}};
+
+response(<<"getTips">>, _Map) ->
+	{ok, #{}};
+
+response(<<"getInclusionStates">>, Map) ->
 	true = maps:has_key(<<"transactions">>, Map)
 		andalso maps:has_key(<<"tips">>, Map),
 	{ok, #{}};
 
-request(<<"getNeighbors">>, _Map) ->
+response(<<"getBalances">>, Map) ->
+	true = maps:has_key(<<"addresses">>, Map)
+		andalso maps:has_key(<<"threshold">>, Map),
 	{ok, #{}};
 
-request(<<"getNodeInfo">>, _Map) ->
-	{ok, #{}};
-
-request(<<"getTips">>, _Map) ->
-	{ok, #{}};
-
-request(<<"getTransactionsToApprove">>, _Map) ->
-	{ok, #{}};
-
-request(<<"getTrytes">>, Map) ->
+response(<<"getTrytes">>, Map) ->
 	true = maps:has_key(<<"hashes">>, Map),
 	{ok, #{}};
 
-request(<<"interruptAttachingToTangle">>, _Map) ->
-	{ok, #{}};
-
-request(<<"storeTransactions">>, Map) ->
-	true = maps:has_key(<<"trytes">>, Map),
-	{ok, #{}};
-
-request(<<"getMissingTransactions">>, _Map) ->
-	{ok, #{}};
-
-request(_, _) ->
+response(_, _) ->
 	{bad_request, #{}}.
