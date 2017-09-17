@@ -1,10 +1,10 @@
 % Copyright (c) 2017 Solarbit.cc <steve@solarbit.cc>
 % See LICENCE
 
--module(iota_hash).
+-module(iota_crypto).
 -include("iota.hrl").
 
--export([generate_seed/0, curl/1, curl/2, bcurlt/2, bcurlt/3, kerl/1, kerl/2]).
+-export([generate_seed/0, hash/2, hash/3]).
 
 -define(TRYTE_HASHLENGTH, 81).
 
@@ -25,8 +25,19 @@ generate_seed() ->
 	trinary:from_binary(Bin0).
 
 
-curl(Trytes) ->
-	curl(Trytes, 1).
+hash(Sponge, Trytes) ->
+	hash(Sponge, Trytes, []).
+
+hash(curl, Trytes, Opts) ->
+	SqueezeCount = proplists:get_value(squeeze, Opts, 1),
+	curl(Trytes, SqueezeCount);
+hash(bcurlt, {HighTrytes, LowTrytes}, Opts) ->
+	SqueezeCount = proplists:get_value(squeeze, Opts, 1),
+	bcurlt(HighTrytes, LowTrytes, SqueezeCount);
+hash(kerl, Trytes, Opts) ->
+	SqueezeCount = proplists:get_value(squeeze, Opts, 1),
+	kerl(Trytes, SqueezeCount).
+
 
 curl(Trytes, SqueezeCount) ->
 	State = curl_absorb(Trytes),
@@ -90,9 +101,6 @@ curl_get_hash(Trits) ->
 	trinary:from_trits(lists:reverse(Hash)).
 
 
-bcurlt(HighTrytes, LowTrytes) ->
-	bcurlt(HighTrytes, LowTrytes, 1).
-
 bcurlt(HighTrytes, LowTrytes, SqueezeCount) ->
 	{HighState, LowState} = bcurlt_absorb(HighTrytes, LowTrytes),
 	bcurlt_squeeze(HighState, LowState, SqueezeCount).
@@ -129,7 +137,7 @@ bcurlt_transform(HighState, LowState) ->
 	bcurlt_transform(HighState, LowState, 1).
 
 bcurlt_transform(HighState, LowState, Round) when Round =< ?CURL_ROUNDS ->
-	{HighState0, LowState0} = curl_transform(HighState, LowState, 1, 1, [], []),
+	{HighState0, LowState0} = bcurlt_transform(HighState, LowState, 1, 1, [], []),
 	bcurlt_transform(HighState0, LowState0, Round + 1);
 bcurlt_transform(HighState, LowState, _) ->
 	{HighState, LowState}.
@@ -142,15 +150,12 @@ bcurlt_transform(HighState, LowState, Index, Count, HAcc, LAcc) when Count =< ?S
 	Beta = lists:nth(Index, HighState),
 	Gamma = lists:nth(Index0, HighState),
 	Delta = (Alpha bor (bnot Gamma)) band (lists:nth(Index0, LowState) bxor Beta),
-	HAcc0 = (Alpha bxor Gamma) bor Delta,
-	LAcc0 = not Delta,
+	HAcc0 = [(Alpha bxor Gamma) bor Delta|HAcc],
+	LAcc0 = [not Delta|LAcc],
 	bcurlt_transform(HighState, LowState, Index, Count + 1, HAcc0, LAcc0);
 bcurlt_transform(_, _, _, _, HAcc, LAcc) ->
 	{lists:reverse(HAcc), lists:reverse(LAcc)}.
 
-
-kerl(Trytes) ->
-	kerl(Trytes, 1).
 
 kerl(Trytes, SqueezeCount) ->
 	Hash = kerl_absorb(Trytes),
