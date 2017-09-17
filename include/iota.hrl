@@ -19,3 +19,8 @@
 	validity = 0, type = 1, arrival_time = 0,
 	solid = false, height = 0, sender = "", snapshot
 }).
+
+
+% NOTE: Placeholders until a decision is made on the HTTP library to use
+-record(http_request, {version, method, path, headers, params, content}).
+-record(http_response, {version, status, message, headers, content}).

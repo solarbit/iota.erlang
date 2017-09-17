@@ -21,9 +21,9 @@ stop() ->
 	gen_server:cast(?MODULE, stop).
 
 
-status() ->
-	{ok, Status} = gen_server:call(?MODULE, status),
-	io:format(Status, []).
+info() ->
+	gen_server:call(?MODULE, info).
+
 
 
 put(K, V) ->
@@ -35,19 +35,17 @@ get(K) ->
 
 
 init(_Args) ->
-	Path = code:priv_dir(?APPLICATION) ++ "/iota.db",
-	{ok, Ref} = erocksdb:open(Path, [{create_if_missing, true}], []),
-	{ok, Ref}.
+	{ok, iota_db:connect()}.
 
 
-handle_call(status, _From, Ref) ->
-	Reply = erocksdb:status(Ref),
+handle_call(info, _From, Ref) ->
+	Reply = iota_db:info(Ref),
 	{reply, Reply, Ref};
 handle_call({get, K}, _From, Ref) ->
-	Reply = erocksdb:get(Ref, K, []),
+	Reply = iota_db:get(Ref, K),
 	{reply, Reply, Ref};
 handle_call({put, K, V}, _From, Ref) ->
-	Reply = erocksdb:put(Ref, K, V, []),
+	Reply = iota_db:put(Ref, K, V),
 	{reply, Reply, Ref};
 handle_call(Message, _From, Ref) ->
 	{reply, {error, Message}, Ref}.
@@ -68,5 +66,5 @@ code_change(_OldVsn, Ref, _Extra) ->
 
 
 terminate(_Reason, Ref) ->
-	erocksdb:close(Ref),
+	iota_db:release(Ref),
 	ok.
