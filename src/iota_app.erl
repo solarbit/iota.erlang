@@ -8,7 +8,7 @@
 
 
 start(normal, []) ->
-    iota_sup:start_link([{iota_srv, []}]).
+    iota_sup:start_link([{iota_srv, []}, {iota_data_srv, []}]).
 
 
 stop(_State) ->
