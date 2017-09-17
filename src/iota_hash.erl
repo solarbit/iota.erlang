@@ -25,7 +25,6 @@ generate_seed() ->
 	trinary:from_binary(Bin0).
 
 
-
 curl(Trytes) ->
 	curl(Trytes, 1).
 
@@ -38,7 +37,7 @@ curl_absorb(Trytes) ->
 	curl_absorb(Trytes, ?CURL_INITIAL_STATE).
 
 curl_absorb(<<Trytes:?TRYTE_HASHLENGTH/binary, Bin/binary>>, State) ->
-	State0 = next_curl_state(Trytes, State),
+	State0 = curl_update_state(Trytes, State),
 	State1 = curl_transform(State0),
 	curl_absorb(Bin, State1);
 curl_absorb(<<>>, State) ->
@@ -49,7 +48,7 @@ curl_squeeze(State, Count) ->
 	curl_squeeze(State, Count, <<>>).
 
 curl_squeeze(State, Count, Acc) when Count > 0 ->
-	Trytes = get_curl_hash(State),
+	Trytes = curl_get_hash(State),
 	State0 = curl_transform(State),
 	curl_squeeze(State0, Count - 1, <<Acc/binary, Trytes/binary>>);
 curl_squeeze(_, 0, Acc) ->
@@ -80,13 +79,13 @@ curl_next_index(X) ->
 	X - 365.
 
 
-next_curl_state(Trytes, State) ->
+curl_update_state(Trytes, State) ->
 	Trits = lists:reverse(trinary:to_trits(Trytes)),
 	{_, Rest} = lists:split(?TRIT_HASHLENGTH, State),
 	Trits ++ Rest.
 
 
-get_curl_hash(Trits) ->
+curl_get_hash(Trits) ->
 	{Hash, _} = lists:split(?TRIT_HASHLENGTH, Trits),
 	trinary:from_trits(lists:reverse(Hash)).
 
@@ -104,8 +103,8 @@ bcurlt_absorb(High, Low) ->
 
 bcurlt_absorb(<<HighTrytes:?TRYTE_HASHLENGTH/binary, Bin/binary>>,
 		<<LowTrytes:?TRYTE_HASHLENGTH/binary, Bin0/binary>>, HighState, LowState) ->
-	HighState0 = next_curl_state(HighTrytes, HighState),
-	LowState0 = next_curl_state(LowTrytes, LowState),
+	HighState0 = curl_update_state(HighTrytes, HighState),
+	LowState0 = curl_update_state(LowTrytes, LowState),
 	{HighState1, LowState1} = bcurlt_transform(HighState0, LowState0),
 	bcurlt_absorb(Bin, Bin0, HighState1, LowState1);
 bcurlt_absorb(<<>>, <<>>, HighState, LowState) ->
@@ -116,9 +115,9 @@ bcurlt_squeeze(HighState, LowState, Count) ->
 	bcurlt_squeeze(HighState, LowState, Count, <<>>, <<>>).
 
 bcurlt_squeeze(High, Low, Count, HAcc, LAcc) when Count > 0 ->
-	HighTrytes = get_curl_hash(High),
+	HighTrytes = curl_get_hash(High),
 	HAcc0 = <<HAcc/binary, HighTrytes/binary>>,
-	LowTrytes = get_curl_hash(Low),
+	LowTrytes = curl_get_hash(Low),
 	LAcc0 = <<LAcc/binary, LowTrytes/binary>>,
 	{High0, Low0} = bcurlt_transform(High, Low),
 	bcurlt_squeeze(High0, Low0, Count - 1, HAcc0, LAcc0);
@@ -129,11 +128,25 @@ bcurlt_squeeze(_, _, 0, HAcc, LAcc) ->
 bcurlt_transform(HighState, LowState) ->
 	bcurlt_transform(HighState, LowState, 1, 1, []).
 
-bcurlt_transform(HighState, LowState, Index, Count, Acc) when Count =< ?STATE_LENGTH ->
-	% TODO: Implement
-	bcurlt_transform(HighState, LowState, Index, Count + 1, Acc);
-bcurlt_transform(_, _, _, _, Acc) ->
-	lists:reverse(Acc).
+bcurlt_transform(HighState, LowState, Round) when Round =< ?CURL_ROUNDS ->
+	{HighState0, LowState0} = curl_transform(HighState, LowState, 1, 1, [], []),
+	bcurlt_transform(HighState0, LowState0, Round + 1);
+bcurlt_transform(HighState, LowState, _) ->
+	{HighState, LowState}.
+
+
+% TODO: Find TEST VECTORS
+bcurlt_transform(HighState, LowState, Index, Count, HAcc, LAcc) when Count =< ?STATE_LENGTH ->
+	Index0 = curl_next_index(Index),
+	Alpha = lists:nth(Index, LowState),
+	Beta = lists:nth(Index, HighState),
+	Gamma = lists:nth(Index0, HighState),
+	Delta = (Alpha bor (bnot Gamma)) band (lists:nth(Index0, LowState) bxor Beta),
+	HAcc0 = (Alpha bxor Gamma) bor Delta,
+	LAcc0 = not Delta,
+	bcurlt_transform(HighState, LowState, Index, Count + 1, HAcc0, LAcc0);
+bcurlt_transform(_, _, _, _, HAcc, LAcc) ->
+	{lists:reverse(HAcc), lists:reverse(LAcc)}.
 
 
 kerl(Trytes) ->

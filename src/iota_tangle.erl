@@ -1,6 +1,7 @@
-% Copyright (c) 2017 Mastercard. All rights reserved.
+% Copyright (c) 2017 Solarbit.cc <steve@solarbit.cc>
+% See LICENCE
 
--module(iota_data_srv).
+-module(iota_tangle).
 
 -include("iota.hrl").
 

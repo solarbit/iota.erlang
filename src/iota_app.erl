@@ -11,7 +11,7 @@
 
 start(normal, []) ->
 	Env = application:get_all_env(),
-    iota_sup:start_link([{iota_srv, Env}, {iota_data_srv, Env}]).
+    iota_sup:start_link([{iota_srv, Env}, {iota_tangle, Env}]).
 
 
 stop(_State) ->
