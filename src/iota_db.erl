@@ -41,7 +41,7 @@ connect() ->
 	CFOptions = [{atom_to_list(Bucket), ?DEFAULT_CF_OPTIONS} || Bucket <- ?BUCKETS],
 	{ok, Ref, CF} = rocksdb:open_with_cf(Path, ?DEFAULT_DB_OPTIONS, CFOptions),
 	Buckets = maps:from_list(lists:zip(?BUCKETS, CF)),
-	#{db => Ref, buckets => Buckets}.
+	{ok, #{db => Ref, buckets => Buckets}}.
 
 
 release(#{db := DB}) ->

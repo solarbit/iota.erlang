@@ -48,7 +48,7 @@ cancel_attach(Ref) ->
 
 init(_Args) ->
 	{ok, DS} = iota_db:connect(),
-	{ok, #{ds => DS, ref => undefined}}.
+	{ok, #{ds => DS, pearldiver => undefined}}.
 
 
 handle_call(info, _From, State = #{ds := DS}) ->
@@ -60,15 +60,15 @@ handle_call({get, K}, _From, State = #{ds := DS}) ->
 handle_call({put, K, V}, _From, State = #{ds := DS}) ->
 	Reply = iota_db:put(DS, K, V),
 	{reply, Reply, State};
-handle_call({attach, Trunk, Branch, MinimumWeight, TryteList}, From, State = #{ref := _Ref}) ->
+handle_call({attach, Trunk, Branch, MinimumWeight, TryteList}, From, State = #{pearldiver := _Ref}) ->
 	Ref0 = erlang:make_ref(), % spawn a pearl diver
 	{reply, {ok, Ref0}, State#{ref => Ref0}};
 handle_call(Message, _From, State) ->
 	{reply, {error, Message}, State}.
 
-handle_cast(cancel_attach, State = #{ref := Ref}) ->
+handle_cast(cancel_attach, State = #{pearldiver := Ref}) ->
 	% cancel pearl diver
-	{noreply, State#{ref => undefined}};
+	{noreply, State#{pearldiver => undefined}};
 handle_cast(stop, State) ->
     {stop, normal, State};
 handle_cast(_Message, State) ->
