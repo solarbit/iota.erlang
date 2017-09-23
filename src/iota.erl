@@ -19,15 +19,15 @@ stop() ->
 
 
 seed() ->
-	iota_cryto:generate_seed().
+	iota_crypto:generate_seed().
 
 
 curl(Trytes) when byte_size(Trytes) > 0 andalso byte_size(Trytes) rem 81 == 0 ->
-	iota_cryto:hash(curl, Trytes).
+	iota_crypto:hash(curl, Trytes).
 
 
 kerl(Trytes) when byte_size(Trytes) > 0 andalso byte_size(Trytes) rem 81 == 0 ->
-	iota_cryto:hash(kerl, Trytes).
+	iota_crypto:hash(kerl, Trytes).
 
 
 send(Bin) ->

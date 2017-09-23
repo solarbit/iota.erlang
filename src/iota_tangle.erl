@@ -61,7 +61,7 @@ handle_call({put, K, V}, _From, State = #{ds := DS}) ->
 	Reply = iota_db:put(DS, K, V),
 	{reply, Reply, State};
 handle_call({attach, Trunk, Branch, MinimumWeight, TryteList}, From, State = #{pearldiver := _Ref}) ->
-	Ref0 = erlang:make_ref(), % spawn a pearl diver
+	Ref0 = erlang:make_ref(), % TODO: spawn a pearl diver
 	{reply, {ok, Ref0}, State#{ref => Ref0}};
 handle_call(Message, _From, State) ->
 	{reply, {error, Message}, State}.
