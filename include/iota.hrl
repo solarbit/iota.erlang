@@ -20,7 +20,34 @@
 	solid = false, height = 0, sender = "", snapshot
 }).
 
+-define(MONEY_SUPPLY, 2779530283277761). % (3^33 - 1) / 2
 
 % NOTE: Placeholders until a decision is made on the HTTP library to use
 -record(http_request, {version, method, path, headers, params, content}).
 -record(http_response, {version, status, message, headers, content}).
+
+
+
+% hmm
+-record(neighbor, {uri}).
+
+% From GetNodeInfoResponse - very java oriented
+-record(node_info, {
+	uri,
+	app_name, % string
+	app_version, % string
+	jre_available_processors,
+	jre_version, % string
+	jre_free_memory, % long
+	jre_max_memory, % long
+	jre_total_memory, % long
+	latest_milestone, % string
+	latest_milestone_index, % int
+	latest_solid_subtangle_milestone, % string
+	latest_solid_subtangle_milestone_index, % int
+	neighbors, % int
+	packets_queue_size, % int
+	time, % long
+	tips, % int
+	transactions_to_request % int
+}).

@@ -34,37 +34,54 @@ get(K) ->
 	gen_server:call(?MODULE, {get, K}).
 
 
+load(transaction, Hash) ->
+	gen_server:call(?MODULE, {load_transaction, Hash}).
+
+
+attach(Trunk, Branch, MinimumWeight, TryteList) ->
+	gen_server:call(?MODULE, {attach, Trunk, Branch, MinimumWeight, TryteList}).
+
+
+cancel_attach(Ref) ->
+	gen_server:call(?MODULE, {cancel_attach, Ref}).
+
+
 init(_Args) ->
-	{ok, iota_db:connect()}.
+	{ok, DS} = iota_db:connect(),
+	{ok, #{ds => DS, ref => undefined}}.
 
 
-handle_call(info, _From, Ref) ->
-	Reply = iota_db:info(Ref),
-	{reply, Reply, Ref};
-handle_call({get, K}, _From, Ref) ->
-	Reply = iota_db:get(Ref, K),
-	{reply, Reply, Ref};
-handle_call({put, K, V}, _From, Ref) ->
-	Reply = iota_db:put(Ref, K, V),
-	{reply, Reply, Ref};
-handle_call(Message, _From, Ref) ->
-	{reply, {error, Message}, Ref}.
+handle_call(info, _From, State = #{ds := DS}) ->
+	Reply = iota_db:info(DS),
+	{reply, Reply, State};
+handle_call({get, K}, _From, State = #{ds := DS}) ->
+	Reply = iota_db:get(DS, K),
+	{reply, Reply, State};
+handle_call({put, K, V}, _From, State = #{ds := DS}) ->
+	Reply = iota_db:put(DS, K, V),
+	{reply, Reply, State};
+handle_call({attach, Trunk, Branch, MinimumWeight, TryteList}, From, State = #{ref := _Ref}) ->
+	Ref0 = erlang:make_ref(), % spawn a pearl diver
+	{reply, {ok, Ref0}, State#{ref => Ref0}};
+handle_call(Message, _From, State) ->
+	{reply, {error, Message}, State}.
+
+handle_cast(cancel_attach, State = #{ref := Ref}) ->
+	% cancel pearl diver
+	{noreply, State#{ref => undefined}};
+handle_cast(stop, State) ->
+    {stop, normal, State};
+handle_cast(_Message, State) ->
+    {noreply, State}.
 
 
-handle_cast(stop, Ref) ->
-    {stop, normal, Ref};
-handle_cast(_Message, Ref) ->
-    {noreply, Ref}.
+handle_info(_Message, State) ->
+    {noreply, State}.
 
 
-handle_info(_Message, Ref) ->
-    {noreply, Ref}.
+code_change(_OldVsn, State, _Extra) ->
+	{ok, State}.
 
 
-code_change(_OldVsn, Ref, _Extra) ->
-	{ok, Ref}.
-
-
-terminate(_Reason, Ref) ->
-	iota_db:release(Ref),
-	ok.
+terminate(_Reason, #{ds := DS}) ->
+	iota_db:release(DS).

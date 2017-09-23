@@ -11,7 +11,13 @@
 
 start(normal, []) ->
 	Env = application:get_all_env(),
-    iota_sup:start_link([{iota_srv, Env}, {iota_tangle, Env}]).
+	Config = maps:from_list(Env),
+    iota_sup:start_link([
+		{iota_srv, Config},
+		{iota_tangle, Config},
+		{iota_ledger, Config},
+		{iota_node, maps:with([port], Config)}
+	]).
 
 
 stop(_State) ->

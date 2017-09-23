@@ -7,6 +7,10 @@
 
 -export([request/1]).
 
+-define(NO_PARAMS, #{command => binary}).
+-define(URI_PARAMS, #{command => binary, uri => [binary]}).
+-define(PARAMS_ATTACH, #{command => binary, trunkTransaction => binary,
+		branchTransaction => binary, minWeightMagniture => integer, trytes => binary}).
 
 request(#http_request{path = <<$/>>, content = Content}) ->
 	Json = json:decode(Content),
@@ -15,28 +19,38 @@ request(#http_request{path = <<$/>>, content = Content}) ->
 	#http_response{status = Status, content = json:encode(Json0)}.
 
 
-response(<<"getNodeInfo">>, _Map) ->
-	{ok, #{}};
+response(<<"getNodeInfo">>, #{}) ->
+	NodeInfoRecord = iota_node:info(),
+	Reply = json:from_record(node_info, record_info(fields, node_info), NodeInfoRecord),
+	{ok, Reply};
 
-response(<<"getNeighbors">>, _Map) ->
-	{ok, #{}};
+response(<<"getNeighbors">>, #{}) ->
+	{ok, Peers} = iota_node:get_peers(),
+	Neighbors = [#{address => uri:encode(URI)} || #node_info{uri = URI} <- Peers],
+	{ok, Neighbors};
 
 response(<<"addNeighbors">>, Map) ->
-	true = maps:has_key(<<"uris">>, Map),
-	{ok, #{}};
+ 	URIList = maps:get(<<"uris">>, Map),
+	URIs = [uri:decode(URI) || URI <- URIList],
+	{ok, Peers} = iota_node:add_peers(URIs),
+	{ok, #{addedNeighbors => length(Peers)}};
 
 response(<<"removeNeighbors">>, Map) ->
-	true = maps:has_key(<<"uris">>, Map),
-	{ok, #{}};
+ 	URIList = maps:get(<<"uris">>, Map),
+	URIs = [uri:decode(URI) || URI <- URIList],
+	{ok, Peers} = iota_node:remove_peers(URIs),
+	{ok, #{removedNeighbors => length(Peers)}};
 
 response(<<"attachToTangle">>, Map) ->
-	true = maps:has_key(<<"trunkTransaction">>, Map)
-		andalso maps:has_key(<<"branchTransaction">>, Map)
-		andalso maps:has_key(<<"minWeightMagnitude">>, Map)
-		andalso maps:has_key(<<"trytes">>, Map),
+	Trunk = maps:get(<<"trunkTransaction">>, Map),
+	Branch = maps:get(<<"branchTransaction">>, Map),
+	MinimumWeight = maps:get(<<"minWeightMagnitude">>, Map),
+	TryteList = maps:get(<<"trytes">>, Map),
+	{ok, _Ref} = iota_tangle:attach(Trunk, Branch, MinimumWeight, TryteList),
 	{ok, #{}};
 
-response(<<"interruptAttachingToTangle">>, _Map) ->
+response(<<"interruptAttachingToTangle">>, #{}) ->
+	iota_tangle:cancel_attach(), % Ref?
 	{ok, #{}};
 
 response(<<"broadcastTransactions">>, Map) ->
@@ -51,7 +65,8 @@ response(<<"findTransactions">>, Map) ->
 	{ok, #{}};
 
 response(<<"storeTransactions">>, Map) ->
-	true = maps:has_key(<<"trytes">>, Map),
+	TxList = maps:get(<<"trytes">>, Map),
+	Result = [iota_transaction:validate(Tx) || Tx <- TxList],
 	{ok, #{}};
 
 response(<<"getTransactionsToApprove">>, _Map) ->
@@ -74,8 +89,10 @@ response(<<"getBalances">>, Map) ->
 	{ok, #{}};
 
 response(<<"getTrytes">>, Map) ->
-	true = maps:has_key(<<"hashes">>, Map),
-	{ok, #{}};
+	Hashes = maps:get(<<"hashes">>, Map),
+	Transactions = [iota_tangle:load(transaction, Hash) || Hash <- Hashes],
+	TryteList = [Trytes || #tx{address = Trytes} <- Transactions],
+	{ok, #{trytes => TryteList}};
 
 response(_, _) ->
 	{bad_request, #{}}.

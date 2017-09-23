@@ -25,8 +25,8 @@ generate_seed() ->
 	trinary:from_binary(Bin0).
 
 
-hash(Sponge, Trytes) ->
-	hash(Sponge, Trytes, []).
+hash(SpongeType, Trytes) when is_atom(SpongeType), is_binary(Trytes) ->
+	hash(SpongeType, Trytes, []).
 
 hash(curl, Trytes, Opts) ->
 	SqueezeCount = proplists:get_value(squeeze, Opts, 1),
