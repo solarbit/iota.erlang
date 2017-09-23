@@ -10,7 +10,7 @@
 -record(approvee, {hashes = []}).
 -record(bundle, {hashes = []}).
 -record(milestone, {index, hash}).
--record(statediff, {map = #{}}).
+-record(state_diff, {map = #{}}).
 -record(tag, {hashes = []}).
 
 -define(TX_SIZE, 1604).
