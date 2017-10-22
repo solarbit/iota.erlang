@@ -1,7 +1,7 @@
 % Copyright (c) 2017 Solarbit.cc <steve@solarbit.cc>
 % See LICENCE
 
--module(iota_ledger).
+-module(iota_replicator).
 
 -include("iota.hrl").
 
@@ -10,7 +10,16 @@
 -behaviour(gen_server).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
 
--export([is_approved/1]).
+-define(TRANSACTION_PACKET_SIZE, 1650).
+-define(QUEUE_SIZE, 1000).
+-define(RECV_QUEUE_SIZE, 1000).
+-define(REPLY_QUEUE_SIZE, 1000).
+-define(PAUSE_BETWEEN_TRANSACTIONS, 1).
+-define(REQUEST_HASH_SIZE, 46).
+
+-define(NUM_ACCEPTORS, 32). % NUM_THREADS in IRI
+-define(CRC32_BYTES, 16).
+-define(PORT_BYTES, 10).
 
 
 start_link(Args) ->
@@ -21,18 +30,12 @@ stop() ->
 	gen_server:cast(?MODULE, stop).
 
 
-is_approved(Hash) ->
-	gen_server:call(?MODULE, {is_approved, Hash}).
-
-
-
 init(_Args) ->
-	{ok, Milestone} = build_snapshot(),
-	{ok, #{milestone => Milestone, approvals => []}}.
+	% net_peer:start_link(#{transport => udp, port => ?}),
+	State = #{},
+	{ok, State}.
 
-handle_call({is_approved, Hash}, _From, State = #{approvals := Approvals}) ->
-	Reply = lists:member(Hash, Approvals),
-	{reply, Reply, State};
+
 handle_call(Message, _From, State) ->
 	{reply, {error, Message}, State}.
 
@@ -53,8 +56,3 @@ code_change(_OldVsn, State, _Extra) ->
 
 terminate(_Reason, _State) ->
 	ok.
-
-
-build_snapshot() ->
-	% TODO
-	{ok, #milestone{}}.

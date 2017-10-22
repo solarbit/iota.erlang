@@ -6,6 +6,8 @@
 
 -export([generate_seed/0, hash/2, hash/3]).
 
+-export([subseed/3, key/3]).
+
 -define(TRYTE_HASHLENGTH, 81).
 
 -define(TRIT_HASHLENGTH, (?TRYTE_HASHLENGTH * 3)).
@@ -25,10 +27,24 @@ generate_seed() ->
 	trinary:from_binary(Bin0).
 
 
+subseed(SpongeType, Trytes, Index) when Index >= 0 ->
+	Trits = trinary:to_trits(Trytes),
+	SubSeed = ternary:add(Trits, ternary:from_integer(Index)),
+	hash(SpongeType, trinary:from_trits(SubSeed)).
+
+
+key(SpongeType, Trytes, Fragments) when byte_size(Trytes) =:= ?TRYTE_HASHLENGTH,
+		is_integer(Fragments), Fragments > 0 ->
+	hash(SpongeType, Trytes, [{squeeze, Fragments}]).
+
+
 hash(SpongeType, Trytes) when is_atom(SpongeType), is_binary(Trytes) ->
 	hash(SpongeType, Trytes, []).
 
-hash(curl, Trytes, Opts) ->
+hash(curlp27, Trytes, Opts) ->
+	SqueezeCount = proplists:get_value(squeeze, Opts, 1),
+	curl(Trytes, SqueezeCount);
+hash(curlp81, Trytes, Opts) ->
 	SqueezeCount = proplists:get_value(squeeze, Opts, 1),
 	curl(Trytes, SqueezeCount);
 hash(bcurlt, {HighTrytes, LowTrytes}, Opts) ->

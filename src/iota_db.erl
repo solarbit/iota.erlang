@@ -48,9 +48,9 @@ release(#{db := DB}) ->
 	rocksdb:close(DB).
 
 
-info(#{db := DB}) ->
-	{ok, Status} = rocksdb:stats(DB),
-	io:format(Status, []).
+info(#{db := DB, buckets := Buckets}) ->
+	Info = [{Bucket, rocksdb:count(DB, maps:get(Bucket, Buckets))} || Bucket <- ?BUCKETS],
+	{ok, Info}.
 
 
 get(DS, Key) ->

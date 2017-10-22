@@ -12,6 +12,7 @@
 start(normal, []) ->
 	Env = application:get_all_env(),
 	Config = maps:from_list(Env),
+	?TTY(Config),
     iota_sup:start_link([
 		{iota_srv, Config},
 		{iota_tangle, Config},

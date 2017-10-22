@@ -4,7 +4,11 @@
 -define(APPLICATION, 'iota.erlang').
 
 -define(TTY(X), io:format(user, "[~p:~p] ~p~n", [?MODULE, ?LINE, X])).
+-define(is_record(X), is_tuple(X) andalso tuple_size(X) > 0).
 
+-define(MONEY_SUPPLY, 2779530283277761). % (3^33 - 1) / 2
+
+% MODEL
 % Currently mirrors the IRI model
 -record(address, {hashes = []}).
 -record(approvee, {hashes = []}).
@@ -12,21 +16,16 @@
 -record(milestone, {index, hash}).
 -record(state_diff, {map = #{}}).
 -record(tag, {hashes = []}).
+-record(tx, {hash, type, address, bundle, trunk, branch, tag,
+	value, current_index, last_index, timestamp, nonce, signature}).
+-record(tx_metadata, {hash, validity = 0, type = 1, arrival_time = 0, % confirmed = false,
+	solid = false, height = 0, sender = <<>>, snapshot}).
 
--define(TX_SIZE, 1604).
--record(tx, {address, bundle, trunk, branch, tag,
-	value, current_index, last_index, timestamp,
-	validity = 0, type = 1, arrival_time = 0,
-	solid = false, height = 0, sender = "", snapshot
-}).
 
--define(MONEY_SUPPLY, 2779530283277761). % (3^33 - 1) / 2
-
+% WEB API
 % NOTE: Placeholders until a decision is made on the HTTP library to use
 -record(http_request, {version, method, path, headers, params, content}).
 -record(http_response, {version, status, message, headers, content}).
-
-
 
 % hmm
 -record(neighbor, {uri}).

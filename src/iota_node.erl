@@ -46,7 +46,9 @@ broadcast(Tx) when is_binary(Tx) ->
 init(Args) ->
 	Port = maps:get(port, Args, ?IOTA_DEFAULT_PORT),
 	{ok, Pid} = net_peer:start_link(#{port => Port, protocol => iota_protocol}),
-	State = #{net_peer => Pid},
+	LRUHashCache = maps:new(),
+	LRUByteCache = maps:new(),
+	State = #{net_peer => Pid, hash_cache => LRUHashCache, byte_cache => LRUByteCache},
 	{ok, State}.
 
 
