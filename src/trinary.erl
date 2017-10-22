@@ -3,7 +3,7 @@
 
 -module(trinary).
 
--export([from_integer/1, to_integer/1, from_trits/1, to_trits/1,
+-export([from_integer/1, from_integer/2, to_integer/1, from_trits/1, to_trits/1,
 	from_binary/1, to_binary/1, from_text/1, to_text/1]).
 
 -define(CHARSET, <<"9ABCDEFGHIJKLMNOPQRSTUVWXYZ">>).
@@ -12,6 +12,12 @@
 from_integer(X) ->
 	Trits = ternary:from_integer(X),
 	from_trits(Trits).
+
+from_integer(X, Size) ->
+	Trytes = from_integer(X),
+	PadLength = Size - byte_size(Trytes),
+	Pad = binary:copy(<<$9>>, PadLength),
+	<<Trytes/binary, Pad/binary>>.
 
 
 to_integer(Trytes) ->
@@ -43,7 +49,7 @@ to_trits(<<>>, Acc) ->
 from_binary(Bin) ->
 	from_binary(Bin, <<>>).
 
-from_binary(<<0:3, X:5, Bin/binary>>, Acc) ->
+from_binary(<<0:3, X:5, Bin/binary>>, Acc) when X =< 27 ->
 	Tryte = binary:at(?CHARSET, X),
 	from_binary(Bin, <<Acc/binary, Tryte>>);
 from_binary(<<_, _/binary>>, _) ->
